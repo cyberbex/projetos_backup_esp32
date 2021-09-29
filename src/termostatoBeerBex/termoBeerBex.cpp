@@ -1,3 +1,5 @@
+#include <Arduino.h>
+
 /*-Pinagem dos sensores de temperatura--
     -pino 18, temperatura da torneira
     -pino 5, temperatura do fermentador
@@ -56,7 +58,7 @@ uint8_t sensorTorneira[8] = { 0x28, 0xFF, 0xBB, 0xC6, 0xC1, 0x17, 0x04, 0x5C };
 
 float tempFermentador, tempTorneira, tempGeladeira;
 float tempFermentadorDesejada = 18, tempGeladeiraDesejada = 18,tempTorneiraDesejada=18;
-bool flagTorneira,flagFermentador=true,flagGeladeira;
+bool flagTorneira=true,flagFermentador,flagGeladeira;
 
 void setup(void)
 {
@@ -71,14 +73,17 @@ void setup(void)
   Serial.begin(9600);
   Serial.println("The device started, now you can pair it with bluetooth");
 
-  pinMode(Buzzer, OUTPUT);
-  digitalWrite(Buzzer, LOW);
+  //pinMode(Buzzer, OUTPUT);
+  //digitalWrite(Buzzer, LOW);
   
   pinMode(PinReleFermentador, OUTPUT);
   digitalWrite(PinReleFermentador, LOW);
 
   pinMode(PinReleGeladeira, OUTPUT);
   digitalWrite(PinReleGeladeira, LOW);
+
+  pinMode(PinReleTorneira, OUTPUT);
+  digitalWrite(PinReleTorneira, LOW);
  
 }
 
@@ -95,8 +100,14 @@ void vTask1(void *pvParameters)
  
     ControlaReles();
     LerTemperaturas();
-    MostraValorTemp(tempFermentador);
-    vTaskDelay(pdMS_TO_TICKS(1500));   
+    vTaskDelay(pdMS_TO_TICKS(1500));
+    
+    if(flagFermentador == true) 
+      MostraValorTemp(tempFermentador);
+    else if(flagGeladeira == true)
+      MostraValorTemp(tempGeladeira);
+    else if(flagTorneira)
+      MostraValorTemp(tempTorneira);       
   }
 }
 
@@ -146,19 +157,19 @@ void vTask2(void *pvParameters)
      
      /*----- Seta novos valores para as temperaturas----------------*/
       if (frase2 == "fermentador" && valor <= 30 && valor >= 0){
-        bipBuzzer();
+        //bipBuzzer();
         tempFermentadorDesejada = valor;
       }
         
       
       else if (frase2 == "torneira" && valor <= 30 && valor >= 0){
-        bipBuzzer();
+        //bipBuzzer();
         tempTorneiraDesejada = valor;
 
       }
 
        else if (frase2 == "geladeira" && valor <= 30 && valor >= 0){
-        bipBuzzer();
+        //bipBuzzer();
         tempGeladeiraDesejada = valor;
         SerialBT.print(frase);
       }
@@ -169,19 +180,19 @@ void vTask2(void *pvParameters)
         flagTorneira = true;
         flagFermentador = false;
         flagGeladeira = false;
-        bipBuzzer(); 
+        //bipBuzzer(); 
        }
        else if(frase2 == "mostraFermentador"){
         flagTorneira = false;
         flagFermentador = true;
         flagGeladeira = false; 
-        bipBuzzer();
+        //bipBuzzer();
        }
        else if(frase2 == "mostraGeladeira"){
         flagTorneira = false;
         flagFermentador = false;
         flagGeladeira = true; 
-        bipBuzzer();
+       //bipBuzzer();
        
        }
       
@@ -213,7 +224,7 @@ void mostra_display(int x, int y, const char *s, const uint8_t *fonte)
     u8g2.clearBuffer();
     u8g2.setColorIndex(draw_color);
     u8g2.setFont(u8g2_font_10x20_tr);
-    u8g2.drawStr(17, 18, "Torneira");
+    u8g2.drawStr(25, 18, "Torneira");
     u8g2.drawFrame(2, 0, 120, 60);
     u8g2.setColorIndex(draw_color);
     u8g2.setFont(fonte);
@@ -229,7 +240,7 @@ void mostra_display(int x, int y, const char *s, const uint8_t *fonte)
     u8g2.setColorIndex(draw_color);
     u8g2.setFont(u8g2_font_10x20_tr);
     u8g2.drawStr(10, 18, "Fermentador");
-    u8g2.drawFrame(2, 0, 120, 60);
+    u8g2.drawFrame(2, 2, 120, 60);
     u8g2.setColorIndex(draw_color);
     u8g2.setFont(fonte);
     u8g2.drawStr(x, y, s); 
@@ -244,7 +255,7 @@ void mostra_display(int x, int y, const char *s, const uint8_t *fonte)
     u8g2.clearBuffer();
     u8g2.setColorIndex(draw_color);
     u8g2.setFont(u8g2_font_10x20_tr);
-    u8g2.drawStr(10, 18, "Geladeira");
+    u8g2.drawStr(20, 18, "Geladeira");
     u8g2.drawFrame(2, 0, 120, 60);
     u8g2.setColorIndex(draw_color);
     u8g2.setFont(fonte);
@@ -284,7 +295,7 @@ void ControlaReles()
     digitalWrite(PinReleGeladeira, LOW);  
 }
 
-void bipBuzzer(){
+/* void bipBuzzer(){
 digitalWrite(Buzzer, HIGH);
 delay(100);
 digitalWrite(Buzzer, LOW);
@@ -293,4 +304,4 @@ digitalWrite(Buzzer, HIGH);
 delay(100);
 digitalWrite(Buzzer, LOW);
 
-}
+} */
